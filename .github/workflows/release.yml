@@ -23,7 +23,7 @@ jobs:
       # Short-lived installation token for the release app (Contents: R/W,
       # installed on exactly these repos) — the workflow token can't push to
       # petrsx/homebrew-tap or the petrsx/winget-pkgs fork.
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
