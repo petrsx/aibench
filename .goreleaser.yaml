@@ -1,0 +1,67 @@
+version: 2
+project_name: aibench
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: aibench
+    env: ["CGO_ENABLED=0"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags: ["-trimpath"]
+    # internal/version.Version is the single version sink; the default
+    # ldflags only stamp main.version, so declare them explicitly.
+    ldflags: ["-s -w -X github.com/petrsx/aibench/internal/version.Version={{.Version}}"]
+    targets: ["go_first_class"]
+
+archives:
+  # Windows users expect zip; everyone else gets the default tar.gz.
+  - format_overrides:
+      - goos: windows
+        formats: [zip]
+
+# Release notes are authored on the GitHub release page — publishing there is
+# what triggers the workflow, and goreleaser's default mode (keep-existing)
+# leaves the page's notes untouched. No generated changelog.
+changelog:
+  disable: true
+
+# The tap gets a binary formula: it downloads this release's tarball for
+# the user's platform and links the binary, so an install takes seconds
+# and needs no Go toolchain. A formula (unlike a cask) is never
+# quarantined, so no signing certificate is involved either.
+brews:
+  - name: aibench
+    homepage: https://github.com/petrsx/aibench
+    description: TUI for prompt engineering and testing AI endpoints
+    license: MIT
+    directory: Formula
+    install: bin.install "aibench"
+    test: system "#{bin}/aibench", "--version"
+    commit_msg_template: "aibench {{ .Tag }}"
+    # Don't publish release candidates to the tap.
+    skip_upload: auto
+    repository:
+      owner: petrsx
+      name: homebrew-tap
+      branch: main
+
+winget:
+  - name: aibench
+    publisher: petrsx
+    package_identifier: petrsx.aibench
+    short_description: TUI for prompt engineering and testing AI endpoints
+    license: MIT
+    homepage: https://github.com/petrsx/aibench
+    publisher_support_url: https://github.com/petrsx/aibench/issues
+    # Don't submit release candidates upstream.
+    skip_upload: auto
+    repository:
+      owner: petrsx
+      name: winget-pkgs
+      branch: "aibench-{{ .Version }}"
+      # No pull_request block: the app installation token can't open PRs on
+      # microsoft/winget-pkgs. The release only pushes this branch to the
+      # fork; open the upstream PR by hand:
+      #   gh pr create -R microsoft/winget-pkgs --head petrsx:aibench-<version>

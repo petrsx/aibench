@@ -1,0 +1,10 @@
+# Rates for the demo models, so the Metrics cost rows have something to
+# show. Invented figures — the real table lives in pricing/pricing.yaml.
+gpt-5.4-mini:
+  input: 0.25
+  output: 2
+  context: 400000
+gpt-5.4:
+  input: 1.25
+  output: 10
+  context: 400000

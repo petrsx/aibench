@@ -1,0 +1,54 @@
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+.env.*
+!.env.example
+
+# Editor/IDE
+.idea/
+.vscode/
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# local config & prompt (real endpoints/prompts stay out of the repo)
+aibench.yaml
+.aibench/
+prompt.md
+prompt.tools.json
+prompt.starters.md
+.claude/worktrees/
+
+# The app writes settings.json beside whatever config is in force. A
+# recording stages its fixtures in a temp dir (tui-gif.sh) precisely so
+# this never lands here, but tui-shot can be pointed straight at the demo
+# config — and then the app leaves its state in the repo.
+scripts/vhs/settings.json

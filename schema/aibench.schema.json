@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/petrsx/aibench/main/schema/aibench.schema.json",
+  "title": "aibench config",
+  "description": "Config for aibench (aibench.yaml): profiles say which gateway/provider to talk to, prompt sets say what is being tested — the two switch independently. Mirrors the strict parser in internal/config — unknown keys are errors there and here. The app never writes this file; it persists into settings.json beside it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profiles"],
+  "properties": {
+    "profiles": {
+      "type": "object",
+      "description": "Profile name → endpoint selection.",
+      "additionalProperties": { "$ref": "#/$defs/profile" }
+    },
+    "prompts": {
+      "type": "object",
+      "description": "Prompt set name → what is being tested: an instructions file plus 0..n starter scripts and 0..n tools references. Profiles pin a set by name (prompt:); a profile without a pin runs with the first set by name.",
+      "additionalProperties": { "$ref": "#/$defs/promptset" }
+    },
+    "tools": {
+      "type": "object",
+      "description": "Tools key → tool file path (declarations + bindings; see docs/tool-catalog.md). Prompt sets reference keys, so one file serves many sets.",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["model", "agent"],
+          "description": "What stands behind the endpoint — always declared, never defaulted. model: model inference, this tool owns prompt + params. agent: a hosted agent owning its instructions/tools server-side (responses wire + server state implied; declaring type/store/prompt.file fails loudly)."
+        },
+        "api": { "$ref": "#/$defs/api" },
+        "auth": { "$ref": "#/$defs/auth" },
+        "prompt": {
+          "type": "string",
+          "description": "Optional pin: the prompt set (a top-level prompts: name) this profile starts on. Without it the session keeps its current set. An agent may pin only a starters-only set — it owns its instructions server-side."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "agent" } }, "required": ["kind"] },
+          "then": {
+            "properties": {
+              "api": {
+                "properties": {
+                  "type": false,
+                  "store": false
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "api": {
+      "type": "object",
+      "description": "What to speak and where: the wire shape, the route, and the verbatim headers/query the endpoint needs.",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["openai", "anthropic"],
+          "description": "Whose protocol to speak (the SDK). Default: openai."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["chat", "responses"],
+          "description": "Which of the provider's APIs — the wire shape. openai: chat (default) or responses; anthropic implies messages (omit the field). Forbidden on kind: agent (responses implied)."
+        },
+        "store": {
+          "type": "boolean",
+          "description": "The responses api's stateful mode (the official store parameter): responses stored server-side, requests chained on previous_response_id. Responses api only; forbidden on kind: agent (implied)."
+        },
+        "stream": {
+          "type": "boolean",
+          "description": "The official stream parameter: true streams deltas, false makes one buffered request. Kind-aware default (model: true; agent: false — the hosted-agent endpoint returns an empty event stream). Responses api only."
+        },
+        "base": {
+          "type": "string",
+          "description": "The whole route: a base URL template that may carry {model} (Azure deployment routes); the SDK appends the operation path (/chat/completions, /responses, /v1/messages)."
+        },
+        "model": {
+          "type": "string",
+          "description": "Model name — or the deployment name that fills {model}; also the request body's model and the pricing key. On agent endpoints it must match the agent's own model deployment."
+        },
+        "headers": {
+          "type": "object",
+          "description": "Extra request headers sent verbatim (e.g. a gateway's subscription key as api-key). Values expand ${VAR} from the credentials file; redacted in the capture.",
+          "additionalProperties": { "type": "string" }
+        },
+        "query": {
+          "type": "object",
+          "description": "Extra query parameters sent verbatim (e.g. api-version). Same ${VAR} expansion; values show unredacted in the capture — no secrets here.",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "description": "The credentials source. Credentials never live in the yaml.",
+      "additionalProperties": false,
+      "properties": {
+        "credentials": {
+          "type": "string",
+          "description": "Env-format file holding only the secrets this profile's auth method needs (a relative path resolves against the directory you run aibench from), or \"env\" for the process environment."
+        }
+      }
+    },
+    "promptset": {
+      "type": "object",
+      "description": "One prompt set: what is being tested against whatever endpoint is active.",
+      "additionalProperties": false,
+      "properties": {
+        "instructions": {
+          "type": "string",
+          "description": "The system-prompt file (markdown + YAML frontmatter params, hot-reloaded) — the responses api's term; on chat/messages it lands as the system message. Omit for a starters-only set."
+        },
+        "starters": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Starter-script files, each one scripted conversation (markdown, one ## title per prompt). Declaring any makes launch offer the /starters selection — nothing auto-sends; also played headless by `aibench send --script`."
+        },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Keys of the top-level tools map, merged in list order (tools arrays concatenate; any other colliding field or binding name is an error)."
+        }
+      }
+    }
+  }
+}

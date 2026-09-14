@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/petrsx/aibench/main/schema/aibench.schema.json
+#
+# The config the recorded demos run against — two profiles pointed at
+# scripts/mockendpoint, never a real gateway. Kept generic on purpose:
+# these names end up baked into shareable gifs.
+prompts:
+  weather: # the shipped example prompt, named from the repo root — which
+           # is where a recording runs, and where paths now resolve from
+    instructions: examples/prompts/weather-assistant.md
+    starters:
+      - examples/prompts/weather-assistant.starters.md
+
+profiles:
+  mini: # the smaller model — the demo's starting profile
+    kind: model
+    api:
+      provider: openai
+      base: http://127.0.0.1:8099/v1
+      model: gpt-5.4-mini
+    auth:
+      credentials: env # the wrapper exports a dummy OPENAI_API_KEY
+    prompt: weather
+
+  full: # the same prompt against a bigger model — what /profiles switches to
+    kind: model
+    api:
+      provider: openai
+      base: http://127.0.0.1:8099/v1
+      model: gpt-5.4
+    auth:
+      credentials: env
+    prompt: weather

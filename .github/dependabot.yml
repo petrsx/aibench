@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # One grouped weekly PR for Go dependencies instead of one PR per module.
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      go-deps:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

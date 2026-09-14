@@ -1,0 +1,83 @@
+{
+  "//": "A shared tool set — reference it from any prompt set alongside that set's own tools (the merge concatenates the tools arrays). One section per wire, same tool in each wire's own shape. The binding hits DuckDuckGo's Instant Answer API, which needs no key, so it runs out of the box; pick reduces the envelope to the abstract text.",
+  "chat": {
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "websearch",
+          "description": "Look up a topic on the web. Returns a one-paragraph summary of the best match.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "What to search for."
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    ]
+  },
+  "responses": {
+    "tools": [
+      {
+        "type": "function",
+        "name": "websearch",
+        "description": "Look up a topic on the web. Returns a one-paragraph summary of the best match.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "What to search for."
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    ]
+  },
+  "messages": {
+    "tools": [
+      {
+        "name": "websearch",
+        "description": "Look up a topic on the web. Returns a one-paragraph summary of the best match.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "What to search for."
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "bindings": {
+    "websearch": {
+      "type": "http",
+      "url": "https://api.duckduckgo.com/",
+      "query": {
+        "q": "{query}",
+        "format": "json",
+        "no_html": "1"
+      },
+      "pick": "RelatedTopics.0.Text"
+    }
+  }
+}

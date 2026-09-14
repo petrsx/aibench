@@ -1,0 +1,56 @@
+name: cross-build
+
+# The release builds every shipped target with goreleaser; this runs the
+# same build without publishing, so a platform that stopped compiling is
+# caught here rather than on the release page with a tag already cut.
+#
+# ci.yml is the complement: it runs the tests natively on the three OSes
+# we ship for. This one proves the *release artifacts* build — every
+# goos/goarch pair `targets: go_first_class` expands to, which is more
+# platforms than any runner can test on.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    # Every PR already gets ci.yml's three-OS build and test; the release
+    # matrix only needs re-proving when what it builds changes.
+    paths:
+      - ".goreleaser.yaml"
+      - ".github/workflows/cross-build.yml"
+      - "go.mod"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # goreleaser reads the tag history to derive a version, even for
+          # a snapshot.
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+      # build, not release: no tokens, no tap, no winget, nothing pushed.
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          version: "~> v2"
+          args: build --snapshot --clean
+      - name: list what was built
+        run: find dist -type f -name 'aibench*' | sed 's|^dist/||' | sort
+      # Handy for testing a platform you don't have to hand — notably the
+      # Windows build, whose terminal behaviour (OSC 52 clipboard) cannot
+      # be checked from a linux runner.
+      - uses: actions/upload-artifact@v5
+        with:
+          name: aibench-snapshot
+          path: dist/**/aibench*
+          retention-days: 7
