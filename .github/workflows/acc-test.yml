@@ -1,0 +1,60 @@
+name: acc-test
+
+# The LIVE tier, on demand: one real `aibench send` through each profile
+# against the live endpoints (scripts/acc-test.sh). Deliberately NOT part
+# of the merge gate — live endpoints cost money and fail for infra
+# reasons (rotated key, gateway hiccup) unrelated to the code under
+# review. A red run here means "endpoint drift", not "bad PR".
+#
+# Setup (once): bundle your local project config — profiles, credential
+# files, prompt presets — into the ACC_BUNDLE secret:
+#
+#   tar -C .aibench -czf - . | base64 | gh secret set ACC_BUNDLE
+#
+# Re-run that after rotating a key or changing profiles.
+
+on:
+  workflow_dispatch:
+    inputs:
+      profiles:
+        description: "space-separated profile subset (empty = all)"
+        required: false
+        default: ""
+      msg:
+        description: "message to send"
+        required: false
+        default: "Connection test: reply with the single word ok."
+      timeout:
+        description: "per-send abort"
+        required: false
+        default: "90s"
+
+permissions:
+  contents: read
+
+jobs:
+  acc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+      - name: build
+        run: make build
+      - name: restore project config from ACC_BUNDLE
+        env:
+          ACC_BUNDLE: ${{ secrets.ACC_BUNDLE }}
+        run: |
+          if [ -z "$ACC_BUNDLE" ]; then
+            echo "::error::ACC_BUNDLE secret is not set — see the header of this workflow file"
+            exit 1
+          fi
+          mkdir -p .aibench
+          printf '%s' "$ACC_BUNDLE" | base64 -d | tar -xzf - -C .aibench
+      - name: acc-test
+        env:
+          PROFILES: ${{ inputs.profiles }}
+          MSG: ${{ inputs.msg }}
+          TIMEOUT: ${{ inputs.timeout }}
+        run: make acc-test

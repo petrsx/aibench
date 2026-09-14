@@ -1,0 +1,40 @@
+ ▄▀▄ █ bench
+ █▀█ █            Chat     Inspector     Prompt                      tip: the bars in the graph are buttons — click one
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+   Settings   Help    tab switches · esc closes
+
+  aibench dev  Copyright (C) 2026 Petr Stupka
+  MIT license — https://github.com/petrsx/aibench/blob/main/LICENSE
+
+  commands                                                         chat
+  /clear              clear the conversation, start fresh          enter               send
+                                                                   /                   commands
+  /exit               leave the app                                alt+enter           newline
+  /help               keys and commands (the Help tab)             ↑/↓                 history
+  /init               scaffold ./.aibench for this folder          pgup/pgdn           scroll
+  /pricing-edit       open pricing.yaml in your editor             ctrl+f              find
+  /pricing-update     refresh pricing.yaml from catwalk            ctrl+y              copy chat
+  /profiles-edit      open aibench.yaml in your editor             select text         copy
+  /settings           settings: theme, editor, startup profile     click record line   pin record
+                                                                   ctrl+d              diagnostics
+  command menu                                                     shift+↑/↓           record
+  /                   commands                                     ctrl+end            latest
+  ↑/↓                 cycle
+  tab                 complete                                     prompt
+  enter               run                                          tab                 next field
+                                                                   ctrl+f              find
+  global                                                           ctrl+y              copy prompt
+  shift+tab           cycle tabs                                   ↑/↓ pgup/pgdn       scroll prompt
+  ctrl+c / 'exit'     quit                                         edit the prompt fileparams auto-save
+
+  find (ctrl+f)                                                    inspector
+  enter/ctrl+n        next match                                   tab                 request/response
+  ctrl+p              prev match                                   ↑/↓ pgup/pgdn       scroll
+  ctrl+f/esc          close find                                   ctrl+f              find
+                                                                   ctrl+y              copy body
+                                                                   select text         copy
+                                                                   ctrl+r              raw/render
+                                                                   shift+↑/↓           record
+
+ ↑/↓ scroll • tab settings • esc close                                                  dev · github.com/petrsx/aibench

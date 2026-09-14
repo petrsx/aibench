@@ -1,0 +1,31 @@
+╭────────────────────────────────────────────────────────────────────────────────────────╮
+│ profile: alpha | api: chat | model: alpha-model | host: gw.example.net/v1              │
+╰────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ /profiles        switch endpoint profile
+ /clear           clear the conversation, start fresh
+
+ /exit            leave the app
+ /help            keys and commands (the Help tab)
+ /init            scaffold ./.aibench for this folder
+ /pricing-edit    open pricing.yaml in your editor
+ /pricing-update  refresh pricing.yaml from catwalk
+ /profiles-edit   open aibench.yaml in your editor
+ /settings        settings: theme, editor, startup profile
+╭────────────────────────────────────────────────────────────────────────────────────────╮
+│┃ /                                                                                     │
+╰────────────────────────────────────────────────────────────────────────────────────────╯

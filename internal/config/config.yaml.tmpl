@@ -1,0 +1,23 @@
+# aibench starter config — written on first run, then never touched by
+# the app again. Profiles say where requests go (api + auth); top-level
+# prompt sets (prompts:) say what is being tested — an instructions file
+# plus starter scripts — and a profile may pin one by name (prompt:).
+# None set up here — ready-made presets live in the repo's
+# examples/prompts/. Parsing is strict: a misspelled or unknown key is
+# an error.
+#
+# 1. set api.base and api.model to your endpoint
+# 2. put the matching secrets in .env beside this file
+#    (the method → variables contract: examples/settings/.env.example)
+# 3. run aibench again
+# One short profile per scenario: examples/settings/aibench.yaml.
+# Every knob, group by group: docs/configuration.md.
+profiles:
+  dev:
+    kind: model              # model | agent — always declared
+    api:
+      provider: openai       # openai | anthropic
+      base: https://your-endpoint.example.com/v1
+      model: gpt-5.4-mini
+    auth:
+      credentials: .env      # env-format file beside this yaml; "env" = process env

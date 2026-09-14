@@ -1,0 +1,41 @@
+version: "2"
+linters:
+  enable:
+    - goheader
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - wastedassign
+  settings:
+    # Every .go file carries the MIT marker and the copyright line; the
+    # license text itself is LICENSE. The year is the year of first
+    # publication and stays put, so that
+    # `golangci-lint run --fix` writes a real header into a new file.
+    goheader:
+      values:
+        const:
+          YEAR: "2026"
+      template: |-
+        SPDX-License-Identifier: MIT
+        Copyright (C) {{ YEAR }} Petr Stupka
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofumpt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
