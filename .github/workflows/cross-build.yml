@@ -49,7 +49,7 @@ jobs:
       # Handy for testing a platform you don't have to hand — notably the
       # Windows build, whose terminal behaviour (OSC 52 clipboard) cannot
       # be checked from a linux runner.
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: aibench-snapshot
           path: dist/**/aibench*
