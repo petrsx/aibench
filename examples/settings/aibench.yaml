@@ -1,0 +1,165 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/petrsx/aibench/main/schema/aibench.schema.json
+#
+# aibench config — profiles (one per endpoint: what to talk to; secrets
+# live in the env file each one points at, see .env.example) and prompt
+# sets (what is being tested: instructions + starter scripts; each
+# profile picks its set with prompt:).
+#
+# Your config is ~/.aibench/aibench.yaml — aibench creates a starter one
+# there on first run. Copy profiles from here into it. To keep a config
+# with a project instead, put it at ./aibench.yaml or ./.aibench/aibench.yaml
+# (both win over the home one), or pin any path with --config / CONFIG_FILE.
+# Relative paths inside resolve against the directory you run aibench
+# from, not against this file.
+#
+# Full reference: docs/configuration.md · auth: docs/authentication.md
+# Prompt presets, starters, and request extensions: examples/prompts/
+tools:
+  weather: weather-assistant.tools.json # tool declarations + bindings; keys are reusable across sets
+  websearch: websearch.tools.json # a shared tool any set can add (keyless, runs out of the box)
+
+prompts:
+  weather: # instructions + starter scripts + tools; a profile pins one, launch offers /starters
+    instructions: weather-assistant.md
+    starters:
+      - weather-assistant.starters.md
+    tools:
+      - weather
+      - websearch # merged after the set's own tools
+  weather-starters: # starters-only set — the shape an agent profile may pin
+    starters:
+      - weather-assistant.starters.md
+
+profiles:
+  # --- openai wire -------------------------------------------------------
+
+  dev: # Foundry's OpenAI-compatible v1 surface, chat api
+    kind: model
+    api:
+      provider: openai
+      type: chat # optional — chat is the openai default
+      base: https://your-resource.services.ai.azure.com/openai/v1
+      model: gpt-5.4-mini # the deployment name; also the pricing.yaml key
+      headers:
+        api-key: ${FOUNDRY_KEY}
+    auth:
+      credentials: .env
+    prompt: weather
+
+  dev-deployment: # legacy: classic Azure deployment route, spelled as a {model}
+    # template. Testing/compatibility only — point new work at the v1 surface.
+    kind: model
+    api:
+      provider: openai
+      base: https://your-resource.openai.azure.com/openai/deployments/{model}
+      model: gpt-5.4-mini
+      query:
+        api-version: 2024-06-01
+      headers:
+        api-key: ${AZURE_OPENAI_KEY}
+    auth:
+      credentials: .env
+    prompt: weather
+
+  dev-responses: # the Responses API — preferred for new work; switch profile to compare
+    kind: model
+    api:
+      provider: openai
+      type: responses
+      base: https://your-resource.openai.azure.com/openai/v1
+      model: gpt-5.4-mini
+      # stream: false      # one buffered request instead of SSE deltas
+    auth:
+      credentials: .env
+    prompt: weather
+
+  dev-responses-server: # responses stored server-side, chained on previous_response_id
+    kind: model
+    api:
+      provider: openai
+      type: responses
+      store: true
+      base: https://your-resource.openai.azure.com/openai/v1
+      model: gpt-5.4-mini
+    auth:
+      credentials: .env
+    prompt: weather
+
+  # --- anthropic wire ----------------------------------------------------
+
+  claude-direct: # anthropic provider, direct to api.anthropic.com (messages api implied)
+    kind: model
+    api:
+      provider: anthropic
+      base: https://api.anthropic.com
+      model: claude-opus-4-8
+    auth:
+      credentials: .env # ANTHROPIC_API_KEY → x-api-key
+    prompt: weather
+
+  claude-foundry: # anthropic provider on Foundry Claude (SDK appends /v1/messages)
+    kind: model
+    api:
+      provider: anthropic
+      base: https://your-resource.services.ai.azure.com/anthropic
+      model: claude-sonnet-4-6 # the deployment name
+    auth:
+      credentials: .env # AZURE_API_KEY → x-api-key
+
+  # --- Entra ID auth -----------------------------------------------------
+
+  entra-sp: # no key: the credentials file's service principal selects Bearer token auth
+    kind: model
+    api:
+      provider: openai
+      type: chat
+      base: https://your-resource.openai.azure.com/openai/v1
+      model: gpt-5.4-mini
+    auth:
+      credentials: .env.sp # AZURE_TENANT_ID/CLIENT_ID/CLIENT_SECRET
+
+  entra-token: # your own identity, a token you minted (az account get-access-token)
+    kind: model
+    api:
+      provider: openai
+      type: responses
+      base: https://your-resource.services.ai.azure.com/openai/v1
+      model: gpt-5.4-mini
+    auth:
+      credentials: .env.token # AZURE_TOKEN — no headers line needed
+
+  entra-login: # your own identity, minted per run from your az login
+    kind: model
+    api:
+      provider: openai
+      type: responses
+      base: https://your-resource.services.ai.azure.com/openai/v1
+      model: gpt-5.4-mini
+    auth:
+      credentials: .env.login # AZURE_USE_LOGIN=true — the alternative to a token
+
+  ci: # credentials straight from the process environment, no file
+    kind: model
+    api:
+      provider: openai
+      base: https://api.openai.com/v1
+      model: gpt-5.4-mini
+    auth:
+      credentials: env
+
+  # --- hosted agent ------------------------------------------------------
+
+  my-agent: # a hosted (Foundry) agent: it owns its instructions and tools
+    # kind agent implies the responses wire, server-side state, and
+    # stream: false — declaring api.type or api.store fails, and it may
+    # pin only a starters-only prompt set (instructions live server-side).
+    kind: agent
+    api:
+      provider: openai
+      base: https://your-resource.services.ai.azure.com/api/projects/your-project/agents/your-agent/endpoint/protocols/openai
+      model: gpt-5.4-mini # must match the agent's own deployment
+      headers:
+        api-key: ${FOUNDRY_KEY}
+    auth:
+      credentials: .env
+    prompt: weather-starters # starters are user-side, so valid on kind agent

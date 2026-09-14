@@ -1,0 +1,35 @@
+ ▄▀▄ █ bench
+ █▀█ █            Chat     Inspector     Prompt                      tip: the bars in the graph are buttons — click one
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+   Settings   Help    tab switches · esc closes
+
+  stored in settings.json, beside aibench.yaml
+
+   user
+  ❯ Theme                  auto               auto follows the terminal background
+    Editor                 auto               /profiles-edit opens aibench.yaml with it · auto = $VISUAL/$EDITOR
+    Startup profile        last used          which profile a new session opens on
+
+   system
+    Update check           on                 ask GitHub for a newer release at launch
+
+   system
+    App log                off                write aibench.log beside the config file; --debug overrides
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ↑/↓ select • ←/→ change • tab help • esc close                                         dev · github.com/petrsx/aibench

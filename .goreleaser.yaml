@@ -1,0 +1,78 @@
+version: 2
+project_name: aibench
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: aibench
+    env: ["CGO_ENABLED=0"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags: ["-trimpath"]
+    # internal/version.Version is the single version sink; the default
+    # ldflags only stamp main.version, so declare them explicitly.
+    ldflags: ["-s -w -X github.com/petrsx/aibench/internal/version.Version={{.Version}}"]
+    targets: ["go_first_class"]
+
+archives:
+  # Windows users expect zip; everyone else gets the default tar.gz.
+  - format_overrides:
+      - goos: windows
+        formats: [zip]
+
+# Release notes are authored on the GitHub release page — publishing there is
+# what triggers the workflow, and goreleaser's default mode (keep-existing)
+# leaves the page's notes untouched. No generated changelog.
+changelog:
+  disable: true
+
+# The tap gets a cask: it downloads this release's archive for the user's
+# platform and links the binary — seconds, no Go toolchain — on macOS and
+# Linux alike (Homebrew on Linux installs binary casks now, which is why
+# goreleaser retired the old binary-formula `brews` block). The binary is
+# unsigned, so the post-install hook drops macOS's quarantine flag, the way
+# goreleaser's own docs prescribe; the guard skips it where xattr is absent.
+homebrew_casks:
+  - name: aibench
+    homepage: https://github.com/petrsx/aibench
+    description: TUI for prompt engineering and testing AI endpoints
+    directory: Casks
+    commit_msg_template: "aibench {{ .Tag }}"
+    # Don't publish release candidates to the tap.
+    skip_upload: auto
+    repository:
+      owner: petrsx
+      name: homebrew-tap
+      branch: main
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/aibench"]
+          end
+
+winget:
+  - name: aibench
+    publisher: petrsx
+    package_identifier: petrsx.aibench
+    short_description: TUI for prompt engineering and testing AI endpoints
+    license: MIT
+    homepage: https://github.com/petrsx/aibench
+    publisher_support_url: https://github.com/petrsx/aibench/issues
+    # Don't submit release candidates upstream.
+    skip_upload: auto
+    repository:
+      owner: petrsx
+      name: winget-pkgs
+      branch: "aibench-{{ .Version }}"
+      # The manifests go to the fork and the PR to microsoft/winget-pkgs on
+      # a classic PAT (public_repo) — the app token has no standing on
+      # Microsoft's repo, so it can't open the PR.
+      token: "{{ .Env.WINGET_TOKEN }}"
+      pull_request:
+        enabled: true
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master

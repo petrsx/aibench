@@ -1,0 +1,199 @@
+{
+  "//": "Tools for weather-assistant.md, one section per wire — chat, responses, messages — each carrying the same tools in that wire's own shape, so switching profiles compares the endpoint and not the tool set. Sections are merged into the request body verbatim (other body fields, e.g. response_format, ride along the same way). bindings is aibench-only and never sent: how to execute a tool the model calls (http | static | mcp). search_locations and get_weather hit Open-Meteo, which needs no API key, so this example runs end to end out of the box. A tool with no binding — get_alerts — is inspect-only: the call renders, nothing runs.",
+  "chat": {
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "search_locations",
+          "description": "Search locations by name. Returns matches with latitude and longitude. Use this first to resolve the user's place name.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Full or partial place name."
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "description": "Current weather at a coordinate. Takes the latitude and longitude returned by search_locations.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "description": "Latitude from search_locations."
+              },
+              "longitude": {
+                "type": "number",
+                "description": "Longitude from search_locations."
+              }
+            },
+            "required": [
+              "latitude",
+              "longitude"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_alerts",
+          "description": "Severe-weather alerts for the region. (No binding below: inspect-only — the model's call renders in the transcript, nothing runs.)",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      }
+    ],
+    "tool_choice": "auto"
+  },
+  "responses": {
+    "tools": [
+      {
+        "type": "function",
+        "name": "search_locations",
+        "description": "Search locations by name. Returns matches with latitude and longitude. Use this first to resolve the user's place name.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "Full or partial place name."
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      },
+      {
+        "type": "function",
+        "name": "get_weather",
+        "description": "Current weather at a coordinate. Takes the latitude and longitude returned by search_locations.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "description": "Latitude from search_locations."
+            },
+            "longitude": {
+              "type": "number",
+              "description": "Longitude from search_locations."
+            }
+          },
+          "required": [
+            "latitude",
+            "longitude"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      },
+      {
+        "type": "function",
+        "name": "get_alerts",
+        "description": "Severe-weather alerts for the region. (No binding below: inspect-only — the model's call renders in the transcript, nothing runs.)",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    ],
+    "tool_choice": "auto"
+  },
+  "messages": {
+    "tools": [
+      {
+        "name": "search_locations",
+        "description": "Search locations by name. Returns matches with latitude and longitude. Use this first to resolve the user's place name.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "Full or partial place name."
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "get_weather",
+        "description": "Current weather at a coordinate. Takes the latitude and longitude returned by search_locations.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "description": "Latitude from search_locations."
+            },
+            "longitude": {
+              "type": "number",
+              "description": "Longitude from search_locations."
+            }
+          },
+          "required": [
+            "latitude",
+            "longitude"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "get_alerts",
+        "description": "Severe-weather alerts for the region. (No binding below: inspect-only — the model's call renders in the transcript, nothing runs.)",
+        "input_schema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "bindings": {
+    "get_weather": {
+      "type": "http",
+      "url": "https://api.open-meteo.com/v1/forecast",
+      "query": {
+        "latitude": "{latitude}",
+        "longitude": "{longitude}",
+        "current": "temperature_2m,apparent_temperature,precipitation,wind_speed_10m"
+      },
+      "pick": "current"
+    },
+    "search_locations": {
+      "type": "http",
+      "url": "https://geocoding-api.open-meteo.com/v1/search",
+      "query": {
+        "name": "{text}",
+        "count": "3",
+        "language": "en",
+        "format": "json"
+      },
+      "pick": "results"
+    }
+  }
+}
